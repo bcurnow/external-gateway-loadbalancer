@@ -1,0 +1,43 @@
+# Example: Auto-Generated Gateway and Routes
+# 
+# This example demonstrates the simplified usage where you only define externalServices
+# and the chart automatically generates a default gateway and routes.
+#
+# Features:
+# - Only externalServices defined
+# - Default gateway auto-generated (listens on HTTP and/or HTTPS based on service protocols)
+# - Default routes auto-generated (one per service, with auto-generated hostnames)
+# - Gateway class defaults to Cilium
+# - No explicit gateway or routes configuration needed
+#
+# Deploy with: helm install -f examples/auto-generated.yaml external-gateway .
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "web-api"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api.example.com"
+      - "api-backup.example.com"
+    description: "Web API service"
+    loadBalanceAcrossEndpoints: true
+
+  - name: "secure-service"
+    port: 443
+    protocol: "HTTPS"
+    endpoints:
+      - "secure.example.com"
+    description: "Secure service"
+
+# Gateway and routes sections are omitted - they will be auto-generated!
+# Auto-generated gateway will have:
+# - HTTP listener on port 80 (because web-api uses HTTP)
+# - HTTPS listener on port 443 (because secure-service uses HTTPS)
+# - TLS certificate ref to 'gateway-cert' secret
+#
+# Auto-generated routes will have:
+# - Route: web-api-route → web-api service (hostname: web-api.local)
+# - Route: secure-service-route → secure-service service (hostname: secure-service.local)

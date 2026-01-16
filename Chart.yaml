@@ -1,0 +1,13 @@
+apiVersion: v2
+name: external-gateway-loadbalancer
+description: A Helm chart for creating external services and Gateway API routes pointing to multiple HTTP/HTTPS endpoints
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - external-services
+  - gateway-api
+  - load-balancer
+maintainers:
+  - name: Brian Curnow
+    email: brian.curnow@gmail.com

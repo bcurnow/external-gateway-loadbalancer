@@ -1,0 +1,68 @@
+# Example 3: Multiple Services with Path-Based Routing
+# Multiple external services with different paths routed to different backends
+# Deploy with: helm install -f examples/multi-service-path-routing.yaml external-gateway ./external-gateway-chart
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "api-service"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api.example.com"
+    description: "REST API service"
+
+  - name: "webhook-service"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "webhooks.example.com"
+    description: "Webhook service"
+
+  - name: "auth-service"
+    port: 443
+    protocol: "HTTPS"
+    endpoints:
+      - "auth.example.com"
+    description: "Authentication service"
+
+gateway:
+  name: "multi-service-gateway"
+  className: "cilium"
+  listeners:
+    - name: "http"
+      protocol: "HTTP"
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+
+routes:
+  - name: "api-route"
+    gateway: "multi-service-gateway"
+    hostnames:
+      - "app.local"
+    rules:
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/api"
+        backendRefs:
+          - name: "api-service"
+            port: 80
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/webhooks"
+        backendRefs:
+          - name: "webhook-service"
+            port: 80
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/auth"
+        backendRefs:
+          - name: "auth-service"
+            port: 443
+    description: "Multi-service routing based on paths"

@@ -1,0 +1,87 @@
+{{- if and .Values.gateway .Values.gateway.name }}
+{{/* Custom gateway provided (has name field) - use it as-is */}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Values.gateway.namespace | default .Values.global.namespace }}
+  labels:
+    {{- include "external-gateway-loadbalancer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ .Values.gateway.className }}
+  listeners:
+    {{- range .Values.gateway.listeners }}
+    - name: {{ .name }}
+      protocol: {{ .protocol }}
+      port: {{ .port }}
+      {{- if .tls }}
+      tls:
+        mode: {{ .tls.mode }}
+        {{- if .tls.certificateRefs }}
+        certificateRefs:
+          {{- range .tls.certificateRefs }}
+          - name: {{ .name }}
+            {{- if .namespace }}
+            namespace: {{ .namespace }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- if .allowedRoutes }}
+      allowedRoutes:
+        {{- if .allowedRoutes.namespaces }}
+        namespaces:
+          from: {{ .allowedRoutes.namespaces.from }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+{{- else if .Values.externalServices }}
+{{/* Auto-generate default gateway from externalServices */}}
+{{/* Collect unique protocols from all services */}}
+{{- $protocols := dict }}
+{{- range .Values.externalServices }}
+  {{- $_ := set $protocols .protocol true }}
+{{- end }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: external-gateway
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "external-gateway-loadbalancer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+    generated: "true"
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gatewayClassName: cilium
+  listeners:
+    {{- if hasKey $protocols "HTTP" }}
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- end }}
+    {{- if hasKey $protocols "HTTPS" }}
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: gateway-cert
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- end }}
+{{- end }}

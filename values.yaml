@@ -1,0 +1,106 @@
+# Default values for external-gateway-loadbalancer chart
+# This is a YAML-formatted file with sensible defaults
+
+# Global configuration
+global:
+  namespace: default
+
+# External Services Configuration
+# Each service can have multiple endpoints for load balancing
+# Multiple endpoints will create separate ExternalName services with automatic load balancing via HTTPRoute
+# 
+# AUTO-GENERATION: If only externalServices is defined, the chart will auto-generate:
+# - A default Gateway (listening on all unique protocols from services)
+# - Default HTTPRoutes (one per service, auto-generating hostnames)
+# 
+# CUSTOMIZATION: Provide custom gateway/routes sections to override defaults
+externalServices:
+  - name: "api-service"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api.example.com"
+      - "api2.example.com"
+    description: "External API service with multiple endpoints"
+    # Optional: Set to false to create a single service from all endpoints (requires external LB)
+    loadBalanceAcrossEndpoints: true
+
+  - name: "cluster-service"
+    port: 7480
+    protocol: "HTTP"
+    endpoints:
+      - "pve1:7480"
+      - "pve2:7480"
+      - "pve3:7480"
+      - "pve4:7480"
+    description: "Cluster service load balanced across 4 endpoints"
+    loadBalanceAcrossEndpoints: true
+
+  - name: "secure-api-service"
+    port: 443
+    protocol: "HTTPS"
+    endpoints:
+      - "secure-api.example.com"
+    description: "Secure external API service"
+    loadBalanceAcrossEndpoints: false
+
+# Gateway Configuration (Optional)
+# Omit this section to use auto-generated gateway based on externalServices protocols
+# Uncomment and customize to override auto-generation with custom gateway configuration
+#
+# gateway:
+#   name: "external-gateway"
+#   namespace: null
+#   className: "cilium"
+#   listeners:
+#     - name: "http"
+#       protocol: "HTTP"
+#       port: 80
+#       allowedRoutes:
+#         namespaces:
+#           from: "Same"
+#     - name: "https"
+#       protocol: "HTTPS"
+#       port: 443
+#       tls:
+#         mode: "Terminate"
+#         certificateRefs:
+#           - name: "gateway-cert"
+#       allowedRoutes:
+#         namespaces:
+#           from: "Same"
+
+# Routes Configuration (Optional)
+# Omit this section to use auto-generated routes based on externalServices
+# Uncomment and customize to override auto-generation with custom routes
+#
+# routes:
+#   - name: "api-route"
+#     gateway: "external-gateway"
+#     namespace: null
+#     hostnames:
+#       - "api.example.local"
+#       - "api2.example.local"
+#     rules:
+#       - matches:
+#           - path:
+#               type: "PathPrefix"
+#               value: "/"
+#         backendRefs:
+#           - name: "api-service"
+#             port: 80
+#     description: "Route for API service with load balancing"
+
+# Auto-Generation Notes:
+# - Services are always created if externalServices is defined
+# - Gateway is AUTO-GENERATED if gateway section is omitted/commented
+#   (listens on protocols detected from externalServices)
+# - Routes are AUTO-GENERATED if routes section is omitted/commented
+# Simply omit or set to null any section you don't want to deploy
+
+# Labels and annotations to apply to all resources
+labels: {}
+  # custom-label: "custom-value"
+
+annotations: {}
+  # custom-annotation: "custom-value"

@@ -1,0 +1,25 @@
+# Example 1: Simple HTTP Service (Auto-Generated Gateway and Routes)
+# Single HTTP service pointing to an external API endpoint
+# The chart automatically generates a default gateway and route
+# Deploy with: helm install -f examples/simple-http.yaml external-gateway .
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "external-api"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api.example.com"
+    description: "Simple external API"
+
+# Gateway and routes sections are omitted - they will be auto-generated!
+# Auto-generated resources:
+# - Gateway: listening on HTTP port 80 (gateway class: cilium)
+# - Route: external-api-route → external-api service (hostname: external-api.local)
+
+# No gateway or routes sections needed!
+# The chart will auto-generate:
+# - Gateway: listening on HTTP port 80 (gateway class: cilium)
+# - Route: external-api-route → external-api service (hostname: external-api.local)

@@ -1,0 +1,74 @@
+# Example: HTTPS Gateway with HTTP Backends
+# Secure external gateway (HTTPS) forwarding to unencrypted HTTP backends
+# Prerequisites: Create TLS secret with: 
+#   kubectl create secret tls gateway-cert --cert=path/to/cert.pem --key=path/to/key.pem
+# Deploy with: helm install -f examples/https-gateway-with-http-backends.yaml external-gateway .
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "api-service"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api.example.com"
+    description: "HTTP API backend"
+
+  - name: "webhook-service"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "webhooks.example.com"
+    description: "HTTP webhook backend"
+
+gateway:
+  name: "https-gateway"
+  className: "cilium"
+  listeners:
+    - name: "https"
+      protocol: "HTTPS"
+      port: 443
+      tls:
+        mode: "Terminate"
+        certificateRefs:
+          - name: "gateway-cert"
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+
+routes:
+  - name: "api-route"
+    gateway: "https-gateway"
+    hostnames:
+      - "api.example.local"
+    rules:
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/"
+        backendRefs:
+          - name: "api-service"
+            port: 80
+    description: "Route HTTPS traffic to HTTP API backend"
+
+  - name: "webhook-route"
+    gateway: "https-gateway"
+    hostnames:
+      - "webhooks.example.local"
+    rules:
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/"
+        backendRefs:
+          - name: "webhook-service"
+            port: 80
+    description: "Route HTTPS traffic to HTTP webhook backend"
+
+labels:
+  example: "https-gateway-http-backends"
+  use-case: "tls-termination-with-http-backends"
+
+annotations:
+  description: "HTTPS gateway terminating TLS and forwarding to HTTP backends"

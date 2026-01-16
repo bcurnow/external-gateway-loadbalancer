@@ -1,0 +1,67 @@
+# Example: Load Balancing Across Multiple External Endpoints
+# 
+# This example demonstrates how to create a single gateway that load balances
+# traffic across multiple external endpoints. Perfect for scenarios like:
+# - Proxmox VE (PVE) cluster with multiple hosts
+# - Multiple API servers
+# - Distributed service endpoints
+#
+# In this example:
+# - 4 external endpoints: pve1, pve2, pve3, pve4 (all on port 8006 for Proxmox)
+# - Single gateway: pve.example.local (port 443 external, 8006 internal)
+# - Traffic is load balanced equally across all endpoints
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "proxmox-cluster"
+    port: 8006
+    protocol: "HTTPS"
+    endpoints:
+      - "pve1:8006"
+      - "pve2:8006"
+      - "pve3:8006"
+      - "pve4:8006"
+    description: "Proxmox VE cluster - load balanced across 4 nodes"
+    loadBalanceAcrossEndpoints: true
+
+gateway:
+  name: "external-gateway"
+  namespace: null
+  className: "cilium"
+  listeners:
+    - name: "https"
+      protocol: "HTTPS"
+      port: 443
+      tls:
+        mode: "Terminate"
+        certificateRefs:
+          - name: "proxmox-cert"
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+
+routes:
+  - name: "proxmox-route"
+    gateway: "external-gateway"
+    namespace: null
+    hostnames:
+      - "pve.example.local"
+      - "pve"
+    rules:
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/"
+        backendRefs:
+          - name: "proxmox-cluster"
+            port: 8006
+    description: "Load-balanced route across Proxmox cluster endpoints"
+
+labels:
+  application: "proxmox"
+  environment: "production"
+
+annotations:
+  note: "Load balancing across multiple Proxmox VE nodes"

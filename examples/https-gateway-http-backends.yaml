@@ -1,0 +1,86 @@
+# Example: HTTPS Gateway with HTTP Endpoints
+#
+# This example shows how to configure an HTTPS gateway that forwards traffic
+# to HTTP (unencrypted) backend services. The service protocol specifies what
+# the external endpoint uses, while the gateway listener protocol controls
+# external exposure.
+#
+# Use case: Secure external access to internal HTTP services
+# - External clients connect via HTTPS (encrypted)
+# - Gateway terminates TLS
+# - Backends are pure HTTP (connections to external endpoints use HTTP)
+#
+# Prerequisites: Create TLS secret
+#   kubectl create secret tls gateway-cert --cert=cert.pem --key=key.pem
+#
+# Deploy with: helm install -f examples/https-gateway-http-backends.yaml external-gateway .
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "app-backend"
+    port: 80
+    protocol: "HTTP"  # ← External endpoint is HTTP
+    endpoints:
+      - "backend1.example.com"
+      - "backend2.example.com"
+    description: "HTTP backend service"
+    loadBalanceAcrossEndpoints: true
+
+  - name: "api-backend"
+    port: 8080
+    protocol: "HTTP"  # ← External endpoint is HTTP
+    endpoints:
+      - "api.example.com:8080"
+    description: "HTTP API service"
+
+# Custom gateway: HTTPS listener only (TLS termination)
+# Overrides the default auto-generated gateway
+gateway:
+  name: "secure-gateway"
+  className: "cilium"
+  listeners:
+    - name: "https"
+      protocol: "HTTPS"
+      port: 443
+      tls:
+        mode: "Terminate"
+        certificateRefs:
+          - name: "gateway-cert"
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+
+# Custom routes: Specify external access hostnames
+# Overrides auto-generated routes
+routes:
+  - name: "app-route"
+    gateway: "secure-gateway"
+    hostnames:
+      - "app.example.com"
+      - "app.local"
+    rules:
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/"
+        backendRefs:
+          - name: "app-backend"
+            port: 80
+    description: "Route to HTTP app backend via HTTPS gateway"
+
+  - name: "api-route"
+    gateway: "secure-gateway"
+    hostnames:
+      - "api.example.com"
+      - "api.local"
+    rules:
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/api"
+        backendRefs:
+          - name: "api-backend"
+            port: 8080
+    description: "Route to HTTP API backend via HTTPS gateway"

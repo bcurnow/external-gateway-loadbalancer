@@ -1,0 +1,57 @@
+# Example 4: Multiple Services with Header-Based Routing
+# Route requests to different services based on HTTP headers
+# Deploy with: helm install -f examples/header-based-routing.yaml external-gateway ./external-gateway-chart
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "api-v1"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api-v1.example.com"
+    description: "API Version 1"
+
+  - name: "api-v2"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api-v2.example.com"
+    description: "API Version 2"
+
+gateway:
+  name: "header-routing-gateway"
+  className: "cilium"
+  listeners:
+    - name: "http"
+      protocol: "HTTP"
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+
+routes:
+  - name: "api-version-route"
+    gateway: "header-routing-gateway"
+    hostnames:
+      - "api.local"
+    rules:
+      - matches:
+          - headers:
+              - name: "X-API-Version"
+                value: "v2"
+        backendRefs:
+          - name: "api-v2"
+            port: 80
+      - matches:
+          - headers:
+              - name: "X-API-Version"
+                value: "v1"
+        backendRefs:
+          - name: "api-v1"
+            port: 80
+      - backendRefs:
+          - name: "api-v1"
+            port: 80
+    description: "Route based on API version header"

@@ -1,0 +1,51 @@
+# Example 5: Weighted Load Balancing
+# Distribute traffic across multiple services using weights (canary deployments)
+# Deploy with: helm install -f examples/weighted-load-balancing.yaml external-gateway ./external-gateway-chart
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "api-stable"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api-stable.example.com"
+    description: "Stable API version"
+
+  - name: "api-canary"
+    port: 80
+    protocol: "HTTP"
+    endpoints:
+      - "api-canary.example.com"
+    description: "Canary API version"
+
+gateway:
+  name: "weighted-gateway"
+  className: "cilium"
+  listeners:
+    - name: "http"
+      protocol: "HTTP"
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+
+routes:
+  - name: "weighted-api-route"
+    gateway: "weighted-gateway"
+    hostnames:
+      - "api.local"
+    rules:
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/"
+        backendRefs:
+          - name: "api-stable"
+            port: 80
+            weight: 90
+          - name: "api-canary"
+            port: 80
+            weight: 10
+    description: "Weighted routing for canary deployment (90% stable, 10% canary)"

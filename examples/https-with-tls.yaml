@@ -1,0 +1,57 @@
+# Example 2: HTTPS Service with TLS
+# Secure service with HTTPS endpoint and TLS termination
+# This example uses custom gateway configuration to override the default
+# Prerequisites: Create TLS secret with: 
+#   kubectl create secret tls gateway-cert --cert=path/to/cert.pem --key=path/to/key.pem
+# Deploy with: helm install -f examples/https-with-tls.yaml external-gateway .
+
+global:
+  namespace: default
+
+externalServices:
+  - name: "secure-api"
+    port: 443
+    protocol: "HTTPS"
+    endpoints:
+      - "secure-api.example.com"
+    description: "Secure API with TLS"
+
+# Custom gateway: Both HTTP and HTTPS listeners
+# This overrides the default auto-generated gateway
+gateway:
+  name: "secure-gateway"
+  className: "cilium"
+  listeners:
+    - name: "http"
+      protocol: "HTTP"
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+    - name: "https"
+      protocol: "HTTPS"
+      port: 443
+      tls:
+        mode: "Terminate"
+        certificateRefs:
+          - name: "gateway-cert"
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+
+# Custom route: Custom hostname
+# This overrides the auto-generated route
+routes:
+  - name: "secure-api-route"
+    gateway: "secure-gateway"
+    hostnames:
+      - "secure-api.local"
+    rules:
+      - matches:
+          - path:
+              type: "PathPrefix"
+              value: "/"
+        backendRefs:
+          - name: "secure-api"
+            port: 443
+    description: "Route to secure external API"
