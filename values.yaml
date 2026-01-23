@@ -96,16 +96,17 @@ externalServices:
 #               type: "PathPrefix"
 #               value: "/"
 #         backendRefs:
-#           - name: "api-service"
+#           - name: "internal-service"  # For internal Kubernetes services
 #             port: 80
+#           - address: "external-api.example.com"  # For external addresses
+#             port: 443
 #     description: "Route for API service with load balancing"
 
 # Auto-Generation Notes:
-# - Services are always created if externalServices is defined
 # - Gateway is AUTO-GENERATED if gateway section is omitted/commented
 #   (listens on protocols detected from externalServices)
 # - Routes are AUTO-GENERATED if routes section is omitted/commented
-# Simply omit or set to null any section you don't want to deploy
+#   (directly reference external endpoints using addresses)
 
 # Labels and annotations to apply to all resources
 labels: {}

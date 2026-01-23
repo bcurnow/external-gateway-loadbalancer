@@ -13,9 +13,9 @@ The chart now supports **auto-generation** of gateway and routes, making it extr
 - **Mix and match**: Auto-generate gateway but custom routes, or vice versa
 
 This means you can:
-- Minimal config: Just services → auto-generated gateway + routes (`auto-generated.yaml`)
-- Custom gateway: Define services + custom gateway → auto-generated routes
-- Full control: Define services + custom gateway + custom routes (`https-with-tls.yaml`, etc.)
+- Minimal config: Just external endpoints → auto-generated gateway + routes (`auto-generated.yaml`)
+- Custom gateway: Define external endpoints + custom gateway → auto-generated routes
+- Full control: Define external endpoints + custom gateway + custom routes (`https-with-tls.yaml`, etc.)
 
 No boilerplate configuration needed!
 
@@ -43,7 +43,7 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 - Only `externalServices` section defined
 - Gateway auto-generated with listeners for all protocols used in services
 - Routes auto-generated (one per service with auto-generated hostnames)
-- No need to duplicate service definitions in gateway/routes
+- Routes reference external endpoints directly using addresses (no intermediate services)
 
 **Perfect for**:
 - Simple deployments with default behavior
@@ -403,10 +403,7 @@ for i in {1..20}; do
   curl -v -H "Host: pve.example.local" https://localhost:443/ 2>&1 | grep -i "Connected"
 done
 
-# Check service creation
-kubectl get services -l app.kubernetes.io/part-of=proxmox-cluster
-
-# See weighted backend refs in HTTPRoute
+# Check HTTPRoute with load-balanced backend addresses
 kubectl get httproutes proxmox-route -o yaml
 ```
 
@@ -431,14 +428,8 @@ routes:
 ### List All Created Resources
 
 ```bash
-# Services
-kubectl get services -l app.kubernetes.io/name=external-gateway-loadbalancer
-
-# Gateways
-kubectl get gateways
-
-# HTTP Routes
-kubectl get httproutes
+# Check all resources created by the chart
+kubectl get gateways,httproutes
 
 # View detailed gateway info
 kubectl describe gateway external-gateway

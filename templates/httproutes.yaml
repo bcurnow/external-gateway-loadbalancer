@@ -57,31 +57,15 @@ spec:
         {{- end }}
         backendRefs:
           {{- range .backendRefs }}
-          {{- $backendRef := . }}
-          {{- $serviceName := .name }}
-          {{/* Find the service definition to check if it has multiple endpoints */}}
-          {{- $service := index $.Values.externalServices 0 }}
-          {{- range $.Values.externalServices }}
-            {{- if eq .name $serviceName }}
-              {{- $service = . }}
+          - {{- if .address }}
+              address: {{ .address }}
+            {{- else if .name }}
+              name: {{ .name }}
             {{- end }}
-          {{- end }}
-          {{- $shouldLoadBalance := $service.loadBalanceAcrossEndpoints | default true }}
-          {{/* If service has multiple endpoints and load balancing is enabled, create weighted refs */}}
-          {{- if and $shouldLoadBalance (gt (len $service.endpoints) 1) }}
-            {{- $endpointCount := len $service.endpoints }}
-            {{- range $index, $endpoint := $service.endpoints }}
-          - name: {{ $serviceName }}-{{ $index }}
-            port: {{ $backendRef.port }}
-            weight: {{ if $backendRef.weight }}{{ $backendRef.weight }}{{ else }}{{ div 100 $endpointCount }}{{ end }}
+            port: {{ .port }}
+            {{- if .weight }}
+            weight: {{ .weight }}
             {{- end }}
-          {{- else }}
-          - name: {{ $serviceName }}
-            port: {{ $backendRef.port }}
-            {{- if $backendRef.weight }}
-            weight: {{ $backendRef.weight }}
-            {{- end }}
-          {{- end }}
           {{- end }}
     {{- end }}
 {{- end }}
@@ -125,12 +109,12 @@ spec:
         {{- if and $shouldLoadBalance (gt (len $service.endpoints) 1) }}
         {{- $endpointCount := len $service.endpoints }}
         {{- range $index, $endpoint := $service.endpoints }}
-        - name: {{ $service.name }}-{{ $index }}
+        - address: {{ $endpoint }}
           port: {{ $service.port }}
           weight: {{ div 100 $endpointCount }}
         {{- end }}
         {{- else }}
-        - name: {{ $service.name }}
+        - address: {{ index $service.endpoints 0 }}
           port: {{ $service.port }}
         {{- end }}
 {{- end }}
