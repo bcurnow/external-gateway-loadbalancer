@@ -3,9 +3,6 @@
 # The chart automatically generates a default gateway and route
 # Deploy with: helm install -f examples/simple-http.yaml external-gateway .
 
-global:
-  namespace: default
-
 externalServices:
   - name: "external-api"
     port: 80

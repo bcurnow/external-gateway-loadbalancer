@@ -49,8 +49,6 @@ Build a production-ready Helm chart that accomplishes the following:
    - Main README with overview, architecture, quick start, and usage examples
    - ARCHITECTURE.md explaining design decisions and data flow
    - QUICKSTART.md for 5-minute setup with multiple deployment options
-   - COMPLETION_SUMMARY.md providing project overview
-   - DELIVERABLES.md with comprehensive feature checklist
 
 7. WORKING EXAMPLES (6 total)
    - Simple HTTP: Basic single endpoint service

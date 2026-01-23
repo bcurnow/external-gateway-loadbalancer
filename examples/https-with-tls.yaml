@@ -5,9 +5,6 @@
 #   kubectl create secret tls gateway-cert --cert=path/to/cert.pem --key=path/to/key.pem
 # Deploy with: helm install -f examples/https-with-tls.yaml external-gateway .
 
-global:
-  namespace: default
-
 externalServices:
   - name: "secure-api"
     port: 443

@@ -1,10 +1,6 @@
 # Default values for external-gateway-loadbalancer chart
 # This is a YAML-formatted file with sensible defaults
 
-# Global configuration
-global:
-  namespace: default
-
 # External Services Configuration
 # Each service can have multiple endpoints for load balancing
 # Multiple endpoints will create separate ExternalName services with automatic load balancing via HTTPRoute
@@ -24,6 +20,9 @@ externalServices:
     description: "External API service with multiple endpoints"
     # Optional: Set to false to create a single service from all endpoints (requires external LB)
     loadBalanceAcrossEndpoints: true
+    # Optional: Custom labels and annotations for this service
+    labels: {}
+    annotations: {}
 
   - name: "cluster-service"
     port: 7480
@@ -35,6 +34,9 @@ externalServices:
       - "pve4:7480"
     description: "Cluster service load balanced across 4 endpoints"
     loadBalanceAcrossEndpoints: true
+    # Optional: Custom labels and annotations for this service
+    labels: {}
+    annotations: {}
 
   - name: "secure-api-service"
     port: 443
@@ -43,6 +45,9 @@ externalServices:
       - "secure-api.example.com"
     description: "Secure external API service"
     loadBalanceAcrossEndpoints: false
+    # Optional: Custom labels and annotations for this service
+    labels: {}
+    annotations: {}
 
 # Gateway Configuration (Optional)
 # Omit this section to use auto-generated gateway based on externalServices protocols
@@ -52,6 +57,8 @@ externalServices:
 #   name: "external-gateway"
 #   namespace: null
 #   className: "cilium"
+#   labels: {}
+#   annotations: {}
 #   listeners:
 #     - name: "http"
 #       protocol: "HTTP"
@@ -78,6 +85,8 @@ externalServices:
 #   - name: "api-route"
 #     gateway: "external-gateway"
 #     namespace: null
+#     labels: {}
+#     annotations: {}
 #     hostnames:
 #       - "api.example.local"
 #       - "api2.example.local"

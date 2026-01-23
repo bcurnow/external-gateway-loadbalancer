@@ -2,9 +2,6 @@
 # Route requests to different services based on HTTP headers
 # Deploy with: helm install -f examples/header-based-routing.yaml external-gateway ./external-gateway-chart
 
-global:
-  namespace: default
-
 externalServices:
   - name: "api-v1"
     port: 80

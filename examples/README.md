@@ -196,7 +196,55 @@ curl -v -k https://localhost:8443/ 2>&1 | grep "SSL\|TLS"
 
 ---
 
-### 4. Multiple Services with Path-Based Routing (`multi-service-path-routing.yaml`)
+### 3.5. Cert-Manager TLS Automation (`cert-manager-tls.yaml`)
+
+**Use case**: Automatic TLS certificate management with cert-manager
+
+**Features**:
+- Gateway with cert-manager annotations for automatic certificate provisioning
+- HTTPS listener with automatic TLS certificate management
+- No manual certificate management required
+- cert-manager creates and renews certificates automatically
+
+**Architecture**:
+```
+Client (HTTPS)
+    ↓
+Gateway (cert-manager annotations)
+    ↓
+cert-manager → Let's Encrypt → Certificate Secret
+    ↓
+Backend Service (myapp.example.com:443)
+```
+
+**Prerequisites**:
+- cert-manager installed in cluster
+- ClusterIssuer configured (e.g., for Let's Encrypt)
+- Gateway API controller with cert-manager integration
+
+**Install**:
+```bash
+helm install external-gateway . \
+  -f ./examples/cert-manager-tls.yaml \
+  --namespace default \
+  --create-namespace
+```
+
+**Test**:
+```bash
+# Check certificate creation
+kubectl get certificates
+
+# Check secret creation
+kubectl get secrets secure-app-tls
+
+# Test HTTPS access
+curl -H "Host: myapp.example.com" https://your-gateway-ip/
+```
+
+---
+
+### 5. Multiple Services with Path-Based Routing (`multi-service-path-routing.yaml`)
 
 **Use case**: Multiple external services routed based on URL paths
 
@@ -229,7 +277,7 @@ curl -H "Host: app.local" http://localhost:8080/auth/login
 
 ---
 
-### 5. Header-Based Routing (`header-based-routing.yaml`)
+### 6. Header-Based Routing (`header-based-routing.yaml`)
 
 **Use case**: Route requests to different services based on HTTP headers
 
@@ -260,7 +308,7 @@ curl -H "Host: api.local" http://localhost:8080/
 
 ---
 
-### 6. Weighted Load Balancing (`weighted-load-balancing.yaml`)
+### 7. Weighted Load Balancing (`weighted-load-balancing.yaml`)
 
 **Use case**: Canary deployments - gradually roll out new versions
 
@@ -289,7 +337,7 @@ done
 
 ---
 
-### 7. Multi-Endpoint Load Balancing (`multi-endpoint-loadbalancing.yaml`)
+### 8. Multi-Endpoint Load Balancing (`multi-endpoint-loadbalancing.yaml`)
 
 **Use case**: Load balance traffic across multiple external endpoints using a single service
 

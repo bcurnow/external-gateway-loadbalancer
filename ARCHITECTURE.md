@@ -193,7 +193,7 @@ spec:
 ## Configuration Hierarchy
 
 ```
-values.yaml (Global Configuration)
+values.yaml
     │
     ├─ externalServices[]
     │   ├─ name, port, protocol

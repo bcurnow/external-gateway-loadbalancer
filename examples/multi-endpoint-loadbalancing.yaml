@@ -11,9 +11,6 @@
 # - Single gateway: pve.example.local (port 443 external, 8006 internal)
 # - Traffic is load balanced equally across all endpoints
 
-global:
-  namespace: default
-
 externalServices:
   - name: "proxmox-cluster"
     port: 8006

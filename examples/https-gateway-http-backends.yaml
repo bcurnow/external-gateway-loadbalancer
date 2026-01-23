@@ -15,9 +15,6 @@
 #
 # Deploy with: helm install -f examples/https-gateway-http-backends.yaml external-gateway .
 
-global:
-  namespace: default
-
 externalServices:
   - name: "app-backend"
     port: 80

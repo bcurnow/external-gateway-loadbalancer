@@ -12,9 +12,6 @@
 #
 # Deploy with: helm install -f examples/auto-generated.yaml external-gateway .
 
-global:
-  namespace: default
-
 externalServices:
   - name: "web-api"
     port: 80

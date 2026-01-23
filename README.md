@@ -36,7 +36,6 @@ external-gateway-loadbalancer/
 │   ├── header-based-routing.yaml
 │   └── weighted-load-balancing.yaml
 ├── ARCHITECTURE.md                 # Architecture documentation
-├── AUTO_GENERATION.md              # Auto-generation feature guide
 ├── QUICKSTART.md                   # Quick start guide
 └── LICENSE
 ```
@@ -117,8 +116,6 @@ routes:
           - name: "api"
             port: 80
 ```
-
-See [AUTO_GENERATION.md](AUTO_GENERATION.md) for detailed examples of all three approaches.
 
 ### Prerequisites
 
@@ -501,8 +498,46 @@ kubectl describe gateway external-gateway
 ```bash
 helm install external-gateway . \
   --set gateway.className=nginx \
-  --set global.namespace=custom-ns \
   -f values.yaml
+```
+
+### Custom Labels and Annotations
+
+Add custom labels and annotations to all resources:
+
+```yaml
+# Global labels/annotations applied to all resources
+labels:
+  team: platform
+  environment: production
+
+annotations:
+  managed-by: helm
+  contact: platform-team@company.com
+
+# Per-object labels/annotations
+externalServices:
+  - name: my-service
+    # ... other config
+    labels:
+      service-type: external
+    annotations:
+      monitoring: enabled
+
+gateway:
+  # ... gateway config
+  labels:
+    cert-manager: enabled
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+routes:
+  - name: my-route
+    # ... route config
+    labels:
+      route-type: custom
+    annotations:
+      rate-limit: "1000rpm"
 ```
 
 ### Selective Enablement

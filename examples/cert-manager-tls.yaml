@@ -1,0 +1,49 @@
+# Example: Using Cert-Manager for Automatic TLS Certificate Management
+# This example demonstrates how to use cert-manager annotations on the Gateway
+# to automatically provision and manage TLS certificates for HTTPS traffic
+# Prerequisites:
+# - cert-manager installed in the cluster
+# - ClusterIssuer configured (e.g., for Let's Encrypt)
+# - Gateway API controller that supports cert-manager integration (like Cilium)
+#
+# Deploy with: helm install -f examples/cert-manager-tls.yaml external-gateway .
+
+externalServices:
+  - name: "secure-app"
+    port: 443
+    protocol: "HTTPS"
+    endpoints:
+      - "myapp.example.com"
+    description: "Secure application with automatic TLS"
+    loadBalanceAcrossEndpoints: false
+    labels: {}
+    annotations: {}
+
+# Custom Gateway with cert-manager annotations for automatic certificate management
+gateway:
+  name: "secure-gateway"
+  className: "cilium"
+  labels:
+    cert-manager: "enabled"
+  annotations:
+    # cert-manager annotations for automatic certificate provisioning
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/common-name: "myapp.example.com"
+    cert-manager.io/duration: "2160h"  # 90 days
+    cert-manager.io/renew-before: "720h"  # 30 days before expiry
+  listeners:
+    - name: "https"
+      protocol: "HTTPS"
+      port: 443
+      tls:
+        mode: "Terminate"
+        certificateRefs:
+          # cert-manager will create this secret automatically
+          - name: "secure-app-tls"
+            kind: "Secret"
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+
+# Routes will be auto-generated based on externalServices
+# The auto-generated route will use the secure-app service

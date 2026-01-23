@@ -2,9 +2,6 @@
 # Multiple external services with different paths routed to different backends
 # Deploy with: helm install -f examples/multi-service-path-routing.yaml external-gateway ./external-gateway-chart
 
-global:
-  namespace: default
-
 externalServices:
   - name: "api-service"
     port: 80

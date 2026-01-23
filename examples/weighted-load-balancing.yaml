@@ -2,9 +2,6 @@
 # Distribute traffic across multiple services using weights (canary deployments)
 # Deploy with: helm install -f examples/weighted-load-balancing.yaml external-gateway ./external-gateway-chart
 
-global:
-  namespace: default
-
 externalServices:
   - name: "api-stable"
     port: 80
